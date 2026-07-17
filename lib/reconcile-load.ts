@@ -33,12 +33,14 @@ export async function maybeReconcile(loadId: string): Promise<void> {
     justification = result?.justification ?? "";
   }
 
-  await prisma.invoice.create({
-    data: {
+  await prisma.invoice.upsert({
+    where: { loadId },
+    create: {
       loadId,
       amount: invoiceAmount,
       status: "DRAFT",
       reconciliation: JSON.stringify({ rateConAmount, delta, classification, justification }),
     },
+    update: {},
   });
 }

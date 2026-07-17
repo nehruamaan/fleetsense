@@ -3,6 +3,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { resolveChargeDecision, type DiscrepancyClassification } from "@/lib/reconciliation";
 
 export async function approveInvoice(loadId: string) {
   await prisma.invoice.update({ where: { loadId }, data: { status: "APPROVED" } });
@@ -17,7 +18,24 @@ export async function approveAndQueueEmail(loadId: string) {
   const reconciliation: { delta?: number; classification?: string | null } | null = invoice.reconciliation
     ? JSON.parse(invoice.reconciliation)
     : null;
-  const emailText = buildEmailDraft(load.id, reconciliation);
+
+  let canAddCharge = false;
+  if (
+    reconciliation &&
+    typeof reconciliation.delta === "number" &&
+    reconciliation.delta !== 0 &&
+    reconciliation.classification
+  ) {
+    const accessorialDoc = await prisma.document.findFirst({
+      where: { loadId, type: "ACCESSORIAL", status: "EXTRACTED" },
+    });
+    canAddCharge = resolveChargeDecision(
+      reconciliation.classification as DiscrepancyClassification,
+      Boolean(accessorialDoc)
+    ).addCharge;
+  }
+
+  const emailText = buildEmailDraft(load.id, reconciliation, canAddCharge);
 
   await prisma.invoice.update({
     where: { loadId },
@@ -32,15 +50,11 @@ export async function approveAndQueueEmail(loadId: string) {
 
 function buildEmailDraft(
   loadId: string,
-  reconciliation: { delta?: number; classification?: string | null } | null
+  reconciliation: { delta?: number; classification?: string | null } | null,
+  canAddCharge: boolean
 ): string {
   const shortId = loadId.slice(-6);
-  if (
-    reconciliation &&
-    typeof reconciliation.delta === "number" &&
-    reconciliation.delta !== 0 &&
-    reconciliation.classification === "legitimate_accessorial"
-  ) {
+  if (canAddCharge && reconciliation && typeof reconciliation.delta === "number") {
     return `Accessorial charge of $${Math.abs(reconciliation.delta).toFixed(
       2
     )} noted per documentation for Load #${shortId}, confirming for invoice.`;
