@@ -23,31 +23,32 @@ deviation" as the cause. Return ONLY valid JSON:
   "confidence": "high"|"medium"|"low" }`;
 
 // Spec §6 hard rule: a prolonged off-route dwell is a possible-breakdown
-// signature. Priority is forced to HIGH here regardless of what the model
-// said, on both the success path (this function) and the fallback path
-// (degradedResult below) -- a down API must not weaken this.
+// signature. Priority is forced to HIGH regardless of what the model said,
+// on both the success path (applyHardOverride) and the fallback path
+// (degradedResult) -- a down API must not weaken this. Both functions
+// share this single predicate so the two paths can never silently diverge.
+function isBreakdownDwell(candidate: ExceptionCandidate): boolean {
+  return (
+    candidate.type === "DWELL" &&
+    candidate.durationMinutes !== undefined &&
+    candidate.durationMinutes >= DWELL_BREAKDOWN_THRESHOLD_MINUTES
+  );
+}
+
 export function applyHardOverride(
   candidate: ExceptionCandidate,
   raw: ExceptionAgentResult
 ): ExceptionAgentResult {
-  const isBreakdownDwell =
-    candidate.type === "DWELL" &&
-    candidate.durationMinutes !== undefined &&
-    candidate.durationMinutes >= DWELL_BREAKDOWN_THRESHOLD_MINUTES;
-  if (isBreakdownDwell) {
+  if (isBreakdownDwell(candidate)) {
     return { ...raw, priority: "HIGH" };
   }
   return raw;
 }
 
 export function degradedResult(candidate: ExceptionCandidate): ExceptionAgentResult {
-  const isBreakdownDwell =
-    candidate.type === "DWELL" &&
-    candidate.durationMinutes !== undefined &&
-    candidate.durationMinutes >= DWELL_BREAKDOWN_THRESHOLD_MINUTES;
   return {
     likelyCause: "Unable to determine — AI analysis unavailable, deterministic detection only.",
-    priority: isBreakdownDwell ? "HIGH" : "MED",
+    priority: isBreakdownDwell(candidate) ? "HIGH" : "MED",
     draftDriverMessage: null,
     draftCustomerMessage: null,
     confidence: "low",
