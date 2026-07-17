@@ -89,7 +89,12 @@ function detectEtaSlip(load: Load, sorted: PositionUpdate[]): ExceptionCandidate
   const speedMph = traveledMiles / elapsedHours;
   if (speedMph < 5) return null; // too little movement to project a speed -- dwell/deviation handle stationary cases
 
-  const destination = lookupCityCoords(load.destination);
+  let destination;
+  try {
+    destination = lookupCityCoords(load.destination);
+  } catch {
+    return null; // unknown destination -- skip ETA projection rather than crashing all detectors for this load
+  }
   const remainingMiles = haversineMiles({ lat: last.lat, lng: last.lng }, destination);
   const remainingHours = remainingMiles / speedMph;
   const projectedArrival = new Date(last.recordedAt.getTime() + remainingHours * 60 * 60 * 1000);
