@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// NOTE: SQLite has no native JSON type in Prisma. Fields documented in the
+// spec as JSON (rankedDrivers, extractedFields, confidencePerField,
+// reconciliation) are stored as String and JSON.stringify/parse'd in app code.
+
+enum LoadStatus {
+  NEW
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  INVOICED
+}
+
+enum AssignmentStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum DocumentType {
+  BOL
+  POD
+  RATE_CON
+  ACCESSORIAL
+  FUEL
+}
+
+enum DocumentStatus {
+  RECEIVED
+  EXTRACTED
+  FAILED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  APPROVED
+  SENT
+}
+
+enum ExceptionType {
+  ETA_SLIP
+  ROUTE_DEVIATION
+  DWELL
+  CONTACT_LOSS
+}
+
+enum ExceptionPriority {
+  HIGH
+  MED
+  LOW
+}
+
+enum ExceptionStatus {
+  OPEN
+  APPROVED
+  DISMISSED
+}
+
+model Driver {
+  id                  String   @id @default(cuid())
+  name                String
+  currentLat          Float
+  currentLng          Float
+  hosRemainingMinutes Int
+  hos14hrWindowMinutes Int
+  equipmentType       String
+  homeTimePref        String?
+  notes               String   @default("")
+  recentLaneHistory   String   @default("[]") // JSON string array
+
+  assignments   Assignment[]
+  documents     Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Load {
+  id                  String     @id @default(cuid())
+  origin              String
+  destination         String
+  pickupWindow        String
+  deliveryWindow      String
+  equipmentRequired   String
+  plannedRouteGeoJSON String? // JSON string, nullable for "not_monitored" case
+  plannedETA          DateTime?
+  revenue             Float
+  status              LoadStatus @default(NEW)
+  customerEmail       String
+
+  recommendations Recommendation[]
+  assignments     Assignment[]
+  documents       Document[]
+  invoice         Invoice?
+  exceptions      Exception[]
+  positionUpdates PositionUpdate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recommendation {
+  id                   String   @id @default(cuid())
+  loadId               String
+  load                 Load     @relation(fields: [loadId], references: [id])
+  rankedDrivers        String // JSON: [{driverId, hosOk, deadheadMiles, fuelCost, tomorrowConflict}]
+  recommendedDriverId  String
+  rationale            String
+  tieFlag              Boolean  @default(false)
+  confidence           String // "high" | "medium" | "low"
+  degraded             Boolean  @default(false)
+  computedAt           DateTime @default(now())
+}
+
+model Assignment {
+  id             String           @id @default(cuid())
+  loadId         String
+  load           Load             @relation(fields: [loadId], references: [id])
+  driverId       String
+  driver         Driver           @relation(fields: [driverId], references: [id])
+  wasRecommended Boolean
+  overrideReason String?
+  status         AssignmentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Document {
+  id                  String         @id @default(cuid())
+  loadId              String
+  load                Load           @relation(fields: [loadId], references: [id])
+  driverId            String
+  driver               Driver         @relation(fields: [driverId], references: [id])
+  type                DocumentType
+  imageUrl            String
+  extractedFields      String? // JSON
+  confidencePerField   String? // JSON
+  status              DocumentStatus @default(RECEIVED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  loadId          String        @unique
+  load            Load          @relation(fields: [loadId], references: [id])
+  amount          Float
+  status          InvoiceStatus @default(DRAFT)
+  reconciliation  String? // JSON: { rateConAmount, delta, classification?, justification? }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PositionUpdate {
+  id         String   @id @default(cuid())
+  loadId     String
+  load       Load     @relation(fields: [loadId], references: [id])
+  lat        Float
+  lng        Float
+  recordedAt DateTime @default(now())
+}
+
+model Exception {
+  id             String            @id @default(cuid())
+  loadId         String
+  load           Load              @relation(fields: [loadId], references: [id])
+  type           ExceptionType
+  detectedAt     DateTime          @default(now())
+  priority       ExceptionPriority
+  aiRead         String?
+  draftMessage   String?
+  status         ExceptionStatus   @default(OPEN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

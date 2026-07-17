@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+    <rect width="600" height="420" fill="#fdfdfb" stroke="#ccc"/>
+    <text x="40" y="36" font-size="20" font-family="sans-serif" font-weight="bold" fill="#111">PROOF OF DELIVERY</text>
+    <text x="40" y="70" font-size="16" font-family="monospace" transform="rotate(0 40 70)" fill="#222">Load #27gqu9</text>
+    <text x="40" y="96" font-size="16" font-family="monospace" transform="rotate(0 40 96)" fill="#222">Delivered to: Tulsa, OK receiving dock</text>
+    <text x="40" y="122" font-size="16" font-family="monospace" transform="rotate(0 40 122)" fill="#222">Invoice amount: $715.00</text>
+    <text x="40" y="148" font-size="16" font-family="monospace" transform="rotate(0 40 148)" fill="#222">Signed by: T. Whitfield</text>
+    <text x="40" y="174" font-size="16" font-family="monospace" transform="rotate(0 40 174)" fill="#222">No accessorial notes on file</text>
+    
+  </svg>

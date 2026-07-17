@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+    <rect width="600" height="420" fill="#fdfdfb" stroke="#ccc"/>
+    <text x="40" y="36" font-size="20" font-family="sans-serif" font-weight="bold" fill="#111">BILL OF LADING</text>
+    <text x="40" y="70" font-size="16" font-family="monospace" transform="rotate(-6 40 70)" fill="#222">Load #10v9fr</text>
+    <text x="77" y="96" font-size="16" font-family="monospace" transform="rotate(5 77 96)" fill="#222">Shipper: [illegible]</text>
+    <text x="74" y="122" font-size="16" font-family="monospace" transform="rotate(-6 74 122)" fill="#222">Consignee: [illegible]</text>
+    <text x="71" y="148" font-size="16" font-family="monospace" transform="rotate(5 71 148)" fill="#222">Weight: [illegible]</text>
+    <text x="68" y="174" font-size="16" font-family="monospace" transform="rotate(-6 68 174)" fill="#222">Pieces: [illegible]</text>
+    <rect x="47" y="179" width="8.781396108889039" height="4.423305341111256" fill="#999" opacity="0.5"/>
+    <rect x="280" y="281" width="11.020951916111771" height="2.1291419077819773" fill="#999" opacity="0.5"/>
+    <rect x="153" y="268" width="7.300412207025286" height="5.780734250188122" fill="#999" opacity="0.5"/>
+    <rect x="198" y="4" width="14.160701433982027" height="4.928381639304906" fill="#999" opacity="0.5"/>
+    <rect x="85" y="33" width="9.116661898234248" height="5.548390258690522" fill="#999" opacity="0.5"/>
+    <rect x="410" y="37" width="14.027732884814165" height="5.195309686205656" fill="#999" opacity="0.5"/>
+    <rect x="307" y="275" width="10.018600377493087" height="2.240299613778382" fill="#999" opacity="0.5"/>
+    <rect x="478" y="58" width="8.343668674119021" height="3.9988710335628697" fill="#999" opacity="0.5"/>
+    <rect x="496" y="266" width="6.933329193420413" height="4.277226070236763" fill="#999" opacity="0.5"/>
+    <rect x="220" y="56" width="8.574862245930582" height="2.1130668583420307" fill="#999" opacity="0.5"/>
+    <rect x="107" y="331" width="12.030349087581474" height="5.992312303061744" fill="#999" opacity="0.5"/>
+    <rect x="70" y="324" width="13.23093567628659" height="2.798745782283668" fill="#999" opacity="0.5"/>
+    <rect x="175" y="165" width="10.848907307607714" height="5.5516614617569875" fill="#999" opacity="0.5"/>
+    <rect x="146" y="279" width="9.645177649174338" height="5.485964414326181" fill="#999" opacity="0.5"/>
+    <rect x="36" y="176" width="7.83554087252047" height="3.1586180074292534" fill="#999" opacity="0.5"/>
+    <rect x="329" y="204" width="7.449739071326364" height="3.79449122776989" fill="#999" opacity="0.5"/>
+    <rect x="177" y="38" width="15.108784944104377" height="2.0242910113603503" fill="#999" opacity="0.5"/>
+    <rect x="451" y="88" width="8.155872294920634" height="3.3541681077102505" fill="#999" opacity="0.5"/>
+    <rect x="323" y="154" width="8.674369441110386" height="2.3361912788019374" fill="#999" opacity="0.5"/>
+    <rect x="44" y="121" width="11.051216800787234" height="4.478971151310068" fill="#999" opacity="0.5"/>
+    <rect x="295" y="296" width="11.91106633946367" height="2.074383893801739" fill="#999" opacity="0.5"/>
+    <rect x="406" y="363" width="12.996451607365621" height="5.925182693795475" fill="#999" opacity="0.5"/>
+    <rect x="341" y="155" width="6.405089826485437" height="4.89676230282445" fill="#999" opacity="0.5"/>
+    <rect x="114" y="135" width="6.085943242330025" height="4.664371944320862" fill="#999" opacity="0.5"/>
+    <rect x="247" y="219" width="7.965887327066715" height="2.9200628311041013" fill="#999" opacity="0.5"/>
+    <rect x="88" y="228" width="6.605476787859569" height="5.07998338948175" fill="#999" opacity="0.5"/>
+    <rect x="414" y="105" width="7.3671980457421915" height="5.930899914451464" fill="#999" opacity="0.5"/>
+    <rect x="177" y="254" width="15.891433747770916" height="3.9617038560777904" fill="#999" opacity="0.5"/>
+    <rect x="156" y="46" width="15.134759532643276" height="4.772462976153409" fill="#999" opacity="0.5"/>
+    <rect x="416" y="2" width="9.530387753293363" height="2.6526911012272376" fill="#999" opacity="0.5"/>
+    <rect x="239" y="150" width="13.154440578624781" height="3.1351402303493265" fill="#999" opacity="0.5"/>
+    <rect x="95" y="341" width="9.321004250263986" height="2.7930567303943636" fill="#999" opacity="0.5"/>
+    <rect x="422" y="325" width="14.20986960230851" height="2.507485465332645" fill="#999" opacity="0.5"/>
+    <rect x="386" y="206" width="6.435264336058575" height="4.781384561645558" fill="#999" opacity="0.5"/>
+    <rect x="256" y="21" width="7.350975455254755" height="5.602958102627008" fill="#999" opacity="0.5"/>
+    <rect x="321" y="157" width="10.689776316531761" height="2.642421351320983" fill="#999" opacity="0.5"/>
+    <rect x="50" y="42" width="12.642093214576821" height="4.531086012070551" fill="#999" opacity="0.5"/>
+    <rect x="385" y="140" width="12.564916788761792" height="4.6835920162002305" fill="#999" opacity="0.5"/>
+    <rect x="74" y="104" width="11.981423841573003" height="2.513536446128505" fill="#999" opacity="0.5"/>
+    <rect x="80" y="128" width="9.330105725058624" height="4.7314656632135" fill="#999" opacity="0.5"/>
+  </svg>
