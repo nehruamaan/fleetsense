@@ -30,6 +30,7 @@ export function RecommendationPanel({
   const [live, setLive] = useState<CachedRecommendation | null>(cachedRecommendation);
   const [overrideTarget, setOverrideTarget] = useState<string | null>(null);
   const [overrideReason, setOverrideReason] = useState("");
+  const [assignError, setAssignError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -54,10 +55,12 @@ export function RecommendationPanel({
         });
         setStatus("ready");
       } else {
+        setLive(null);
         setStatus("fallback");
       }
     } catch {
       clearTimeout(timeout);
+      setLive(null);
       setStatus("fallback");
     }
   }
@@ -71,18 +74,24 @@ export function RecommendationPanel({
   const ordered = [...scored].sort((a, b) =>
     a.driverId === recommendedId ? -1 : b.driverId === recommendedId ? 1 : 0
   );
+  const hasLiveRecommendation = status !== "fallback" && live !== null;
 
   function handleAssign(driverId: string) {
-    const isRecommended = driverId === recommendedId;
+    const isRecommended = hasLiveRecommendation && driverId === recommendedId;
     if (!isRecommended && overrideTarget !== driverId) {
       setOverrideTarget(driverId);
       return;
     }
     startTransition(async () => {
-      await assignDriver(load.id, driverId, isRecommended ? undefined : overrideReason);
-      setOverrideTarget(null);
-      setOverrideReason("");
-      router.refresh();
+      setAssignError(null);
+      try {
+        await assignDriver(load.id, driverId, isRecommended ? undefined : overrideReason);
+        setOverrideTarget(null);
+        setOverrideReason("");
+        router.refresh();
+      } catch (err) {
+        setAssignError(err instanceof Error ? err.message : "Failed to assign driver.");
+      }
     });
   }
 
@@ -105,11 +114,13 @@ export function RecommendationPanel({
           AI recommendation unavailable right now — showing the deterministic ranking without rationale.
         </p>
       )}
+      {assignError && (
+        <p className="text-sm text-red-700 dark:text-red-400">{assignError}</p>
+      )}
 
       <div className="grid gap-3">
         {ordered.map((candidate) => {
-          const isRecommended =
-            candidate.driverId === recommendedId && status !== "fallback" && live !== null;
+          const isRecommended = hasLiveRecommendation && candidate.driverId === recommendedId;
           return (
             <div
               key={candidate.driverId}
