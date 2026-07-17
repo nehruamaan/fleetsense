@@ -36,6 +36,7 @@ export function RecommendationPanel({
 
   async function compute() {
     setStatus("computing");
+    setLive(null);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
     try {

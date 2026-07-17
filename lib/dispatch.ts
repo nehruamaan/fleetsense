@@ -1,4 +1,4 @@
-import type { Driver, Load } from "@/app/generated/prisma/client";
+import type { Driver, Load, PrismaClient } from "@/app/generated/prisma/client";
 import { haversineMiles, lookupCityCoords } from "./geo";
 
 const AVERAGE_SPEED_MPH = 50;
@@ -61,4 +61,20 @@ export function scoreDrivers(eligible: EligibleDriver[], busyDriverIds: Set<stri
 
 export function topCandidates(scored: ScoredDriver[], count = 3): ScoredDriver[] {
   return scored.slice(0, count);
+}
+
+export async function getScoredCandidates(
+  load: Load,
+  prisma: PrismaClient
+): Promise<ScoredDriver[]> {
+  const [drivers, activeAssignments] = await Promise.all([
+    prisma.driver.findMany(),
+    prisma.assignment.findMany({
+      where: { status: { in: ["PENDING", "ACCEPTED"] } },
+      select: { driverId: true },
+    }),
+  ]);
+  const busyDriverIds = new Set(activeAssignments.map((a) => a.driverId));
+  const eligible = filterEligibleDrivers(load, drivers);
+  return scoreDrivers(eligible, busyDriverIds);
 }

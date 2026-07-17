@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { filterEligibleDrivers, scoreDrivers, topCandidates } from "@/lib/dispatch";
+import { getScoredCandidates, topCandidates } from "@/lib/dispatch";
 import { getDispatchRecommendation } from "@/lib/dispatch-llm";
 
 export async function POST(
@@ -14,21 +14,11 @@ export async function POST(
     return NextResponse.json({ error: "Load not found" }, { status: 404 });
   }
 
-  const [drivers, activeAssignments] = await Promise.all([
-    prisma.driver.findMany(),
-    prisma.assignment.findMany({
-      where: { status: { in: ["PENDING", "ACCEPTED"] } },
-      select: { driverId: true },
-    }),
-  ]);
-  const busyDriverIds = new Set(activeAssignments.map((a) => a.driverId));
-
-  const eligible = filterEligibleDrivers(load, drivers);
-  if (eligible.length === 0) {
+  const scored = await getScoredCandidates(load, prisma);
+  if (scored.length === 0) {
     return NextResponse.json({ status: "no_eligible_drivers" as const });
   }
 
-  const scored = scoreDrivers(eligible, busyDriverIds);
   const top3 = topCandidates(scored, 3);
   const result = await getDispatchRecommendation(load, top3);
 
