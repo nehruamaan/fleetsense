@@ -1,0 +1,59 @@
+// app/alerts/actions.ts
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { detectExceptions } from "@/lib/exceptions";
+import { getExceptionRead } from "@/lib/exceptions-llm";
+
+export async function advanceSimulation() {
+  const inTransitLoads = await prisma.load.findMany({
+    where: { status: "IN_TRANSIT" },
+    include: { positionUpdates: true },
+  });
+
+  const maxRecorded = await prisma.positionUpdate.aggregate({ _max: { recordedAt: true } });
+  const simulatedNow = maxRecorded._max.recordedAt ?? new Date();
+
+  for (const load of inTransitLoads) {
+    const candidates = detectExceptions(load, load.positionUpdates, simulatedNow);
+
+    for (const candidate of candidates) {
+      const existing = await prisma.exception.findFirst({
+        where: { loadId: load.id, type: candidate.type, status: { in: ["OPEN", "APPROVED"] } },
+      });
+      if (existing) continue;
+
+      const { result } = await getExceptionRead(load, candidate);
+
+      await prisma.exception.create({
+        data: {
+          loadId: load.id,
+          type: candidate.type,
+          priority: result.priority,
+          aiRead: result.likelyCause,
+          draftMessage: result.draftDriverMessage ?? result.draftCustomerMessage ?? null,
+          status: "OPEN",
+        },
+      });
+    }
+  }
+
+  revalidatePath("/alerts");
+}
+
+export async function approveException(id: string, editedMessage?: string) {
+  await prisma.exception.update({
+    where: { id },
+    data: {
+      status: "APPROVED",
+      ...(editedMessage !== undefined ? { draftMessage: editedMessage } : {}),
+    },
+  });
+  revalidatePath("/alerts");
+}
+
+export async function dismissException(id: string) {
+  await prisma.exception.update({ where: { id }, data: { status: "DISMISSED" } });
+  revalidatePath("/alerts");
+}
