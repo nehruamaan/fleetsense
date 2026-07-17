@@ -170,6 +170,28 @@ async function main() {
       notes: "",
       recentLaneHistory: ["IN-IL", "IN-KY"],
     },
+    {
+      name: "Priya Shah",
+      currentLat: 39.2904,
+      currentLng: -76.6122,
+      hosRemainingMinutes: 600,
+      hos14hrWindowMinutes: 750,
+      equipmentType: "Dry Van",
+      homeTimePref: null,
+      notes: "",
+      recentLaneHistory: ["MD-PA", "MD-VA"],
+    },
+    {
+      name: "Marcus Webb",
+      currentLat: 40.4406,
+      currentLng: -79.9959,
+      hosRemainingMinutes: 580,
+      hos14hrWindowMinutes: 720,
+      equipmentType: "Dry Van",
+      homeTimePref: null,
+      notes: "",
+      recentLaneHistory: ["PA-OH", "PA-NY"],
+    },
   ];
 
   const drivers = [];
@@ -190,7 +212,7 @@ async function main() {
       })
     );
   }
-  const [alice, ben, carla, derek, elena, frank, grace, hassan, isla, jamal] = drivers;
+  const [alice, ben, carla, derek, elena, frank, grace, hassan, isla, jamal, priya, marcus] = drivers;
 
   console.log("Seeding loads...");
   const now = new Date("2026-07-17T12:00:00Z");
@@ -359,6 +381,22 @@ async function main() {
       customerEmail: "billing@sooner-retail.example",
       assignDriver: elena,
       docs: "mismatch_unsupported" as const,
+    },
+    {
+      // Flagship "soft context flips the pick" case: Alice is closest/cheapest
+      // (she's essentially at the origin already) but her notes say she avoids
+      // NYC-metro drop-offs -- this load's destination IS NYC-metro (Newark).
+      // Priya and Marcus are real, costlier, unencumbered competitors.
+      origin: "Trenton, NJ",
+      destination: "Newark, NJ",
+      pickupWindow: "2026-07-19 07:00-09:00",
+      deliveryWindow: "2026-07-19 11:00-13:00",
+      equipmentRequired: "Dry Van",
+      plannedRouteGeoJSON: JSON.stringify({ type: "LineString", coordinates: [[-74.76, 40.22], [-74.17, 40.74]] }),
+      plannedETA: hours(26),
+      revenue: 780,
+      status: "NEW" as const,
+      customerEmail: "ops@garden-state-retail.example",
     },
   ];
 
