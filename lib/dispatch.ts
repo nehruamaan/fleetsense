@@ -36,3 +36,29 @@ export function filterEligibleDrivers(load: Load, drivers: Driver[]): EligibleDr
 }
 
 export { AVERAGE_SPEED_MPH, PICKUP_OVERHEAD_MINUTES, FUEL_COST_PER_MILE, estimateDriveMinutes };
+
+export type ScoredDriver = {
+  driverId: string;
+  driver: Driver;
+  hosOk: true;
+  deadheadMiles: number;
+  fuelCost: number;
+  tomorrowConflict: boolean;
+};
+
+export function scoreDrivers(eligible: EligibleDriver[], busyDriverIds: Set<string>): ScoredDriver[] {
+  return eligible
+    .map(({ driver, deadheadMiles, totalMiles }) => ({
+      driverId: driver.id,
+      driver,
+      hosOk: true as const,
+      deadheadMiles,
+      fuelCost: Math.round(totalMiles * FUEL_COST_PER_MILE * 100) / 100,
+      tomorrowConflict: busyDriverIds.has(driver.id),
+    }))
+    .sort((a, b) => a.fuelCost - b.fuelCost || a.deadheadMiles - b.deadheadMiles);
+}
+
+export function topCandidates(scored: ScoredDriver[], count = 3): ScoredDriver[] {
+  return scored.slice(0, count);
+}

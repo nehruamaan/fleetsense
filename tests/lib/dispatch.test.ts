@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterEligibleDrivers } from "../../lib/dispatch";
+import { filterEligibleDrivers, scoreDrivers, topCandidates } from "../../lib/dispatch";
 import type { Driver, Load } from "../../app/generated/prisma/client";
 
 function makeDriver(overrides: Partial<Driver>): Driver {
@@ -60,5 +60,34 @@ describe("filterEligibleDrivers", () => {
     expect(result[0].driver.id).toBe("d1");
     expect(result[0].deadheadMiles).toBeCloseTo(0, 0);
     expect(result[0].loadedMiles).toBeGreaterThan(75);
+  });
+});
+
+describe("scoreDrivers + topCandidates", () => {
+  it("sorts ascending by fuel cost and flags busy drivers as tomorrowConflict", () => {
+    const load = makeLoad({});
+    const drivers = [
+      makeDriver({ id: "far", currentLat: 40.4406, currentLng: -79.9959 }), // Pittsburgh - bigger deadhead
+      makeDriver({ id: "near", currentLat: 40.7128, currentLng: -74.006 }), // NYC - tiny deadhead
+    ];
+    const eligible = filterEligibleDrivers(load, drivers);
+    const scored = scoreDrivers(eligible, new Set(["near"]));
+
+    expect(scored[0].driverId).toBe("near");
+    expect(scored[0].tomorrowConflict).toBe(true);
+    expect(scored[1].driverId).toBe("far");
+    expect(scored[1].tomorrowConflict).toBe(false);
+    expect(scored[0].fuelCost).toBeLessThan(scored[1].fuelCost);
+  });
+
+  it("topCandidates slices to the requested count", () => {
+    const load = makeLoad({});
+    const drivers = [
+      makeDriver({ id: "a", currentLat: 40.7128, currentLng: -74.006 }),
+      makeDriver({ id: "b", currentLat: 40.4406, currentLng: -79.9959 }),
+      makeDriver({ id: "c", currentLat: 39.2904, currentLng: -76.6122 }),
+    ];
+    const scored = scoreDrivers(filterEligibleDrivers(load, drivers), new Set());
+    expect(topCandidates(scored, 2)).toHaveLength(2);
   });
 });
