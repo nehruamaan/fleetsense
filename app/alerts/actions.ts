@@ -19,8 +19,11 @@ export async function advanceSimulation() {
     const candidates = detectExceptions(load, load.positionUpdates, simulatedNow);
 
     for (const candidate of candidates) {
+      // DISMISSED counts as "already handled" too -- a dispatcher dismissing an
+      // exception means it stays suppressed, not that it silently reappears
+      // (and re-spends a real LLM call) the next time detection runs.
       const existing = await prisma.exception.findFirst({
-        where: { loadId: load.id, type: candidate.type, status: { in: ["OPEN", "APPROVED"] } },
+        where: { loadId: load.id, type: candidate.type, status: { in: ["OPEN", "APPROVED", "DISMISSED"] } },
       });
       if (existing) continue;
 

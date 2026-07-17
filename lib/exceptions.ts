@@ -40,10 +40,22 @@ function formatDuration(minutes: number): string {
 
 function parseRoute(load: Load): { start: Coordinates; end: Coordinates } | null {
   if (!load.plannedRouteGeoJSON) return null;
-  const parsed = JSON.parse(load.plannedRouteGeoJSON) as { coordinates: [number, number][] };
-  const [startLng, startLat] = parsed.coordinates[0];
-  const [endLng, endLat] = parsed.coordinates[parsed.coordinates.length - 1];
-  return { start: { lat: startLat, lng: startLng }, end: { lat: endLat, lng: endLng } };
+  try {
+    const parsed = JSON.parse(load.plannedRouteGeoJSON) as { coordinates: [number, number][] };
+    const [startLng, startLat] = parsed.coordinates[0];
+    const [endLng, endLat] = parsed.coordinates[parsed.coordinates.length - 1];
+    if (
+      typeof startLat !== "number" ||
+      typeof startLng !== "number" ||
+      typeof endLat !== "number" ||
+      typeof endLng !== "number"
+    ) {
+      return null;
+    }
+    return { start: { lat: startLat, lng: startLng }, end: { lat: endLat, lng: endLng } };
+  } catch {
+    return null; // malformed route JSON -- treat as not_monitored rather than crashing all detectors for this load
+  }
 }
 
 function detectDwell(load: Load, sorted: PositionUpdate[]): ExceptionCandidate | null {
