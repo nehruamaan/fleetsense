@@ -1,3 +1,4 @@
+import { CheckCircle2, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { AiBadge } from "@/components/AiBadge";
 import { AdvanceSimulationButton } from "./AdvanceSimulationButton";
@@ -23,9 +24,10 @@ export default async function AlertsPage() {
       </div>
 
       {sorted.length === 0 ? (
-        <p className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-6 text-center text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+        <div className="flex flex-col items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-6 text-center text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+          <CheckCircle2 className="h-6 w-6" aria-hidden />
           All loads on track.
-        </p>
+        </div>
       ) : (
         <div className="space-y-3">
           {sorted.map((exception) => (
@@ -35,7 +37,10 @@ export default async function AlertsPage() {
             >
               <div className="flex items-center justify-between">
                 <p className="font-medium">
-                  {exception.type.replace("_", " ")} — {exception.load.origin} → {exception.load.destination}
+                  <span className="inline-flex items-center gap-1">
+                    {exception.type.replace("_", " ")} — {exception.load.origin}{" "}
+                    <ArrowRight className="h-3.5 w-3.5 text-zinc-400" aria-hidden /> {exception.load.destination}
+                  </span>
                 </p>
                 <StatusBadge domain="priority" status={exception.priority} />
               </div>

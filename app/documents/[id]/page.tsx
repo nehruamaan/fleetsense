@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { maybeReconcile } from "@/lib/reconcile-load";
 import { resolveChargeDecision } from "@/lib/reconciliation";
@@ -49,7 +49,9 @@ export default async function DocumentReviewPage({
         {document.type} — Load #{document.loadId.slice(-6)}
       </h1>
       <p className="text-sm text-zinc-500">
-        {document.load.origin} → {document.load.destination}
+        <span className="inline-flex items-center gap-1">
+          {document.load.origin} <ArrowRight className="h-3.5 w-3.5 text-zinc-400" aria-hidden /> {document.load.destination}
+        </span>
       </p>
 
       <div className="grid gap-6 sm:grid-cols-2">

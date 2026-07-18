@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getScoredCandidates } from "@/lib/dispatch";
 import { RecommendationPanel } from "./RecommendationPanel";
@@ -34,8 +34,8 @@ export default async function LoadDetailPage({
         Back to Dispatch
       </Link>
       <div>
-        <h1 className="text-2xl font-semibold">
-          {load.origin} → {load.destination}
+        <h1 className="inline-flex items-center gap-2 text-2xl font-semibold">
+          {load.origin} <ArrowRight className="h-5 w-5 text-zinc-400" aria-hidden /> {load.destination}
         </h1>
         <p className="text-sm text-zinc-500">
           {load.equipmentRequired} · Pickup {load.pickupWindow} · ${load.revenue.toFixed(0)}
