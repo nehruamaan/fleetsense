@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approveInvoice, approveAndQueueEmail } from "./actions";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export function ApproveButtons({
   loadId,
@@ -20,15 +21,19 @@ export function ApproveButtons({
 
   if (invoiceStatus === "SENT") {
     return (
-      <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">
-        Invoice approved, email drafted &amp; queued (demo — nothing is actually sent).
-      </p>
+      <div className="mt-3 space-y-2">
+        <StatusBadge domain="invoice" status={invoiceStatus} />
+        <p className="text-sm text-emerald-700 dark:text-emerald-400">
+          Invoice approved, email drafted &amp; queued (demo — nothing is actually sent).
+        </p>
+      </div>
     );
   }
 
   if (invoiceStatus === "APPROVED") {
     return (
       <div className="mt-3 space-y-2">
+        <StatusBadge domain="invoice" status={invoiceStatus} />
         <p className="text-sm text-emerald-700 dark:text-emerald-400">Invoice approved.</p>
         <button
           onClick={() =>
@@ -48,6 +53,7 @@ export function ApproveButtons({
 
   return (
     <div className="mt-3 space-y-2">
+      <StatusBadge domain="invoice" status={invoiceStatus} />
       {delta !== 0 && !canAddCharge && (
         <p className="text-sm text-amber-700 dark:text-amber-400">
           Charge not added — request a supporting document from the driver.

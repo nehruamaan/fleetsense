@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export default async function DispatchPage() {
   const loads = await prisma.load.findMany({
@@ -27,7 +28,7 @@ export default async function DispatchPage() {
             </div>
             <div className="text-right">
               <p className="text-sm font-medium">${load.revenue.toFixed(0)}</p>
-              <p className="text-xs uppercase tracking-wide text-zinc-500">{load.status}</p>
+              <StatusBadge domain="load" status={load.status} />
             </div>
           </Link>
         ))}

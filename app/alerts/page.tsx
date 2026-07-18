@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AiBadge } from "@/components/AiBadge";
 import { AdvanceSimulationButton } from "./AdvanceSimulationButton";
 import { ExceptionActions } from "./ExceptionActions";
+import { StatusBadge } from "@/components/StatusBadge";
 
 const PRIORITY_ORDER: Record<string, number> = { HIGH: 0, MED: 1, LOW: 2 };
 
@@ -36,17 +37,7 @@ export default async function AlertsPage() {
                 <p className="font-medium">
                   {exception.type.replace("_", " ")} — {exception.load.origin} → {exception.load.destination}
                 </p>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    exception.priority === "HIGH"
-                      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
-                      : exception.priority === "MED"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
-                  }`}
-                >
-                  {exception.priority}
-                </span>
+                <StatusBadge domain="priority" status={exception.priority} />
               </div>
               {exception.aiRead && (
                 <p className="mt-2 flex items-start gap-2 text-sm">

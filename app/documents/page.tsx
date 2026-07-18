@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export default async function DocumentsPage() {
   const documents = await prisma.document.findMany({
@@ -19,7 +20,7 @@ export default async function DocumentsPage() {
             <p className="font-medium">
               Driver submitted a {doc.type} for Load #{doc.loadId.slice(-6)}
             </p>
-            <span className="text-xs uppercase tracking-wide text-zinc-500">{doc.status}</span>
+            <StatusBadge domain="document" status={doc.status} />
           </Link>
         ))}
         {documents.length === 0 && (
