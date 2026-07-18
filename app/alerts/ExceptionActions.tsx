@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { approveException, dismissException } from "./actions";
+import { useToast } from "@/components/toast/ToastProvider";
 
 export function ExceptionActions({
   exceptionId,
@@ -15,11 +16,29 @@ export function ExceptionActions({
   const [editedMessage, setEditedMessage] = useState(draftMessage ?? "");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const showToast = useToast();
 
   function handleApprove() {
     startTransition(async () => {
-      await approveException(exceptionId, isEditing ? editedMessage : undefined);
-      router.refresh();
+      try {
+        await approveException(exceptionId, isEditing ? editedMessage : undefined);
+        showToast("Exception approved.");
+        router.refresh();
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Failed to approve exception.", "error");
+      }
+    });
+  }
+
+  function handleDismiss() {
+    startTransition(async () => {
+      try {
+        await dismissException(exceptionId);
+        showToast("Exception dismissed.");
+        router.refresh();
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "Failed to dismiss exception.", "error");
+      }
     });
   }
 
@@ -52,12 +71,7 @@ export function ExceptionActions({
           {isEditing ? "Cancel edit" : "Edit"}
         </button>
         <button
-          onClick={() =>
-            startTransition(async () => {
-              await dismissException(exceptionId);
-              router.refresh();
-            })
-          }
+          onClick={handleDismiss}
           disabled={isPending}
           className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-700"
         >

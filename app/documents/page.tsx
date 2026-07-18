@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Inbox } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export default async function DocumentsPage() {
   const documents = await prisma.document.findMany({
@@ -19,11 +21,14 @@ export default async function DocumentsPage() {
             <p className="font-medium">
               Driver submitted a {doc.type} for Load #{doc.loadId.slice(-6)}
             </p>
-            <span className="text-xs uppercase tracking-wide text-zinc-500">{doc.status}</span>
+            <StatusBadge domain="document" status={doc.status} />
           </Link>
         ))}
         {documents.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-zinc-500">No documents submitted yet.</p>
+          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-sm text-zinc-500">
+            <Inbox className="h-6 w-6 text-zinc-400" aria-hidden />
+            No documents submitted yet.
+          </div>
         )}
       </div>
     </div>
