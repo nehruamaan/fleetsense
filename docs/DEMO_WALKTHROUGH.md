@@ -1,140 +1,154 @@
-# FleetSense — Local Demo Walkthrough
+# FleetSense — Demo Walkthrough
 
-The dev server runs at **http://localhost:3000**. This doc is a guided tour — what each screen is for, which buttons are "user input" you're meant to press, and what should happen when you press them.
+This is a guided tour of the live app at **https://fleetsense-live.vercel.app**. It covers what each screen does, what to click, and why certain things behave the way they do.
 
-If the server isn't running:
+The app puts you in the role of **Dana**, a dispatcher managing a small trucking fleet. The four nav links represent her entire shift, in order:
 
-```bash
-npm run dev
-```
-
-Then open http://localhost:3000 — it redirects to `/dispatch`.
-
----
-
-## The four screens
-
-| Nav link | Route | Role it stands in for |
+| Screen | Route | Dana is doing… |
 |---|---|---|
-| Dispatch | `/dispatch` | Dana (the dispatcher) picking a driver for a load |
-| Documents | `/documents` | Dana reviewing driver-submitted paperwork and approving invoices |
-| Alerts | `/alerts` | Dana's proactive exception feed for in-transit loads |
-| Driver | `/driver` | Stand-in for a driver's phone camera, uploading a document |
+| **Dispatch** | `/dispatch` | Assigning a driver to a new load |
+| **Driver** | `/driver` | Stand-in for a driver uploading paperwork from their cab |
+| **Documents** | `/documents` | Reviewing submitted docs, reconciling billing, approving invoices |
+| **Alerts** | `/alerts` | Watching for problems on loads already in transit |
 
-Every place you see a small **✦ AI** badge, the text next to it came from a real Gemini call made at that moment (or cached from the last one) — not canned copy.
+> **Suggested order for a first run:** Dispatch → Driver → Documents → Alerts
+>
+> Each section below explains what to do and what to watch for.
+
+Everywhere you see a **✦ AI** badge, the text next to it came from a real live Gemini call — not pre-written copy.
 
 ---
 
 ## 1. Smart Dispatch (`/dispatch`)
 
-**What you're looking at:** a list of loads that need a driver assigned. Click any row to open its detail page.
+**Context:** A load has come in. Dana needs to pick the right driver.
 
-**What happens when you open a load detail page (`/dispatch/[id]`):**
-- The page immediately fires a request to score every eligible driver and ask Gemini to rank the top 3.
-- You'll usually see **"Computing recommendation…"** for a moment. There's a hard 3-second client-side timeout — if the real Gemini call takes longer (common), the panel falls back to **"AI recommendation unavailable right now — showing the deterministic ranking without rationale."** This is expected, per-spec behavior, not a bug: the call is still finishing on the server. Refresh the page a few seconds later and the real recommendation (with rationale) will now be there, served from cache.
-- The recommended driver is highlighted green with **"· Recommended"**, along with the AI rationale under the ✦ AI badge, a confidence level, and a tie flag if the top 2 were close.
+### What you're looking at
+A list of loads waiting to be assigned. Click any row to open its detail page.
 
-**Try these interactions:**
-- **Recompute** button (top of the Candidates panel) — forces a fresh live call instead of using the cached recommendation. Useful if you want to watch the "Computing…" state again.
-- **Assign** button on any candidate:
-  - If you assign the **recommended** driver, it's a single click — no extra confirmation needed.
-  - If you assign anyone **else**, an input box appears asking for a one-line override reason. The **Confirm assign** button stays disabled until you type something — this is deliberate, it's the audit trail for "why did Dana ignore the AI."
-  - Once assigned, the page replaces the whole Candidates panel with a green **"Assigned to {name}"** banner — you can't double-assign the same load.
+### What happens when you open a load
+The page immediately kicks off a scoring and ranking request:
+1. Every eligible driver is scored on HOS legality, deadhead miles, fuel cost, and equipment match — deterministically, in code.
+2. Gemini is then asked to rank the top candidates, with access to soft context like driver notes and recent lane history.
+3. The recommended driver appears highlighted in green with a **· Recommended** label, an AI rationale, a confidence level, and a tie flag if two drivers were very close.
 
-**Interesting loads to open, to see different behaviors:**
-- A load whose only eligible equipment type nobody has → an honest empty state, not a crash.
-- A load with no planned route → renders fine without ETA/route info.
-- A load into a lane one of the cheaper drivers has a note about avoiding (e.g. a driver who "avoids NYC-metro drop-offs") → the AI should demote that cheaper driver and recommend someone else, with the rationale explicitly citing the note. This is the flagship "soft context beats raw cost" moment — read the rationale text to confirm it's reasoning about the note, not just re-stating the cheapest option.
+**You'll often see "Computing recommendation…" for a few seconds.** This is normal — there's a real LLM call in progress. If it takes longer than 3 seconds, the UI falls back to showing the deterministic ranking without rationale (so Dana can keep working), and the AI result loads from cache on your next refresh. This is intentional: *the AI improves decisions but is never required to make them.*
+
+### What to try
+- **Assign the recommended driver** → single click, confirmed immediately.
+- **Assign a different driver** → an override reason box appears and the Confirm button stays disabled until you type something. This is the audit trail — Dana has to record *why* she disagreed with the AI.
+- **Recompute** (top of the panel) → forces a fresh live call so you can watch the loading state again.
+
+### The most interesting load to open
+Look for a load where the cheapest driver has a note indicating they avoid a particular area (e.g. "avoids NYC-metro drop-offs"). The AI should demote that driver and explain why in its rationale — this is the **"soft context beats raw cost"** scenario, and the rationale text should make the reasoning explicit.
 
 ---
 
-## 2. Driver upload (`/driver`)
+## 2. Driver Upload (`/driver`)
 
-**What you're looking at:** a simple form — this is the only screen meant to represent the *driver's* side of the app, not Dana's.
+**Context:** A driver has just delivered a load and needs to submit their paperwork.
 
-**What to do:**
+### What you're looking at
+A simple upload form — this is the only screen representing the *driver's* perspective, not Dana's. In a real product this would be a mobile camera interface; here it's a plain form in the browser.
+
+### What to do
 1. Pick a **Load** from the dropdown.
-2. Pick a **Document type** (BOL / POD / RATE_CON / ACCESSORIAL / FUEL).
-3. Choose a **Photo** — any image file works (a real photo of a rate confirmation or invoice will produce the most legible extraction; a random image will still run through the pipeline but likely extract null/low-confidence fields, which is itself worth seeing).
+2. Pick a **Document type**: BOL, POD, RATE_CON, ACCESSORIAL, or FUEL.
+3. Upload an **image** (any image file works — a photo of an actual invoice gives the most interesting extraction result; a random image will still run through the pipeline and return null/low-confidence fields, which is itself useful to see).
 4. Click **Submit**.
 
-**What happens:** the file is stored, a `Document` row is created, and a real Gemini vision call attempts to extract fields (amounts, dates, load numbers) from the image. You're redirected/can navigate to Documents In to see the result. If the image is unreadable, the extraction fields come back honestly null rather than fabricated — check this on the Documents detail page (below).
+### What happens behind the scenes
+Gemini's vision model reads the image and tries to extract structured fields: load number, amounts, dates, signatures. If the document is legible, you'll see real values. If it isn't, the fields come back honestly as "unknown" or null — the system never fabricates values to fill a field.
+
+After submitting, head to **Documents** to see the result.
 
 ---
 
-## 3. Documents In (`/documents`)
+## 3. Documents (`/documents`)
 
-**What you're looking at:** every document any driver has submitted, newest first, with its processing status (RECEIVED / EXTRACTED / FAILED).
+**Context:** Dana is reviewing submitted paperwork and approving invoices.
 
-Click into any document (`/documents/[id]`) to see:
-- The uploaded image next to its extracted fields (with a per-field confidence label where available).
-- If **both** a RATE_CON and a POD exist for that load, the page automatically reconciles them and — if the amounts differ — asks Gemini to classify the discrepancy (legitimate accessorial charge / likely error / uncertain).
-- The reasoning under the ✦ AI badge explains what it decided and why.
+### What you're looking at
+Every document submitted by any driver, newest first, with a status badge: RECEIVED → EXTRACTED → FAILED.
 
-**The key thing to look for — the hallucination guard:** a charge is only ever proposed as addable if the classification says "legitimate accessorial" **and** a matching `ACCESSORIAL` document actually exists on file for that load. If the amounts don't match but there's no supporting accessorial document, you'll see:
+### Click into any document
+You'll see the original image alongside the extracted fields. If the document came back with low confidence on any field, each field shows its confidence level individually.
 
-> "Charge not added — request a supporting document from the driver."
+### The billing reconciliation
+When **both** a RATE_CON and a POD exist for the same load, the page automatically reconciles them. If the amounts don't match, Gemini classifies the gap:
+- **Legitimate accessorial charge** → the system proposes adding the charge
+- **Likely billing error** → flagged for review
+- **Uncertain** → Dana decides
 
-— even if the LLM's own text sounds confident. This is enforced in code (`lib/reconciliation.ts`'s `resolveChargeDecision`), not just the prompt, specifically so the model can't talk its way into authorizing a charge with no paper trail.
+**But here's the key guardrail:** even if the AI classification says "legitimate charge" with full confidence, the *Add charge* option only becomes available if an actual ACCESSORIAL document is also on file. No supporting document = no charge, regardless of what the model says. The AI provides reasoning; a code-level rule makes the decision.
 
-**Buttons on this page:**
-- **Approve Invoice** — marks the invoice approved, no charge decisions get revisited.
-- **Approve & Queue Email** — additionally drafts a templated confirmation/dispute email (built from structured fields, not freeform LLM text) and marks it queued. Nothing is actually emailed anywhere — the button label and the confirmation text both say so; this is intentional per spec ("nothing auto-sends").
+This is the **hallucination guard** — you'll see it in action if you open a document where there's a discrepancy but no supporting accessorial doc. The page will say *"Charge not added — request a supporting document from the driver"* instead of surfacing the button.
 
-**Loads worth comparing:**
-- One with a clean rate-con/POD pair → no discrepancy shown at all.
-- One with a supported detention/accessorial delta → charge gets proposed, both buttons work end to end.
-- One with an unsupported mismatch → refuses to add the charge (see guard above).
-- One with a garbled/unreadable source document → extracted fields render as "unknown," not made-up numbers.
+### Loads worth comparing
+| What to look for | What you'll see |
+|---|---|
+| RATE_CON + POD with matching amounts | Clean reconciliation, no discrepancy |
+| RATE_CON + POD with a gap + ACCESSORIAL doc on file | Charge proposed, Add/Approve buttons active |
+| RATE_CON + POD with a gap + no ACCESSORIAL doc | Guard fires — charge blocked despite potential AI confidence |
+| Garbled or illegible document image | Extracted fields show "unknown", not invented values |
+
+### Buttons on this page
+- **Approve Invoice** — marks the invoice approved.
+- **Approve & Queue Email** — additionally drafts a confirmation/dispute email from structured fields (not free-form LLM text) and queues it. Nothing is actually sent anywhere — the button and confirmation both say so. The "queue, don't auto-send" design is intentional: Dana always has final approval before anything goes out.
 
 ---
 
 ## 4. Proactive Alerts (`/alerts`)
 
-**What you're looking at:** a feed of exceptions (things going wrong with in-transit loads), sorted HIGH → MED → LOW priority. On a fresh seed, this starts empty — **"All loads on track."** — because detection hasn't run yet.
+**Context:** Loads are already on the road. Dana needs to know if anything is going wrong.
 
-**The one button that drives everything here: "Advance simulation time."**
+### What you're looking at
+An exception feed, sorted HIGH → MED → LOW priority. On a fresh start (or after clicking **Reset demo data**), this page shows **"All loads on track"** — because the monitoring hasn't run yet.
 
-This is a stand-in for "time passing" / a background job that would normally run on a schedule. Clicking it:
-1. Re-evaluates every in-transit load's simulated GPS trace against four deterministic detectors (ETA slip, route deviation, dwell/stopped, contact loss).
-2. For any newly-detected exception, calls Gemini to draft a plain-English read of the situation and a suggested check-in message.
-3. Refreshes the feed with the new exception cards.
+### The "Advance simulation time" button
 
-This takes a little while (it's making several sequential real Gemini calls) — expect 20-30 seconds, not instant. If you click it and nothing seems to happen immediately, give it a moment and refresh.
+This button is the most important thing on this page, and it needs a bit of explanation.
 
-**What you should see after clicking it once on a fresh seed:**
-- One load with a route deviation / ETA slip exception, HIGH priority, with an AI explanation.
-- One load that's been stationary far longer than a normal stop, flagged DWELL. If the stop is long enough to plausibly be a breakdown, priority is **hard-forced to HIGH in code** regardless of what the LLM itself guessed — this override exists specifically so a model that under-reacts to a dangerous situation can't suppress the alert.
-- A third, "clean" load produces no exception at all — proving the detectors aren't just flagging everything.
+In a real deployment, background monitoring would run on a schedule every few minutes — checking GPS position, ETA, dwell time, and last contact for every active load. In this prototype, that job is manual: **clicking "Advance simulation time" runs one cycle of the monitoring job right now**, against simulated GPS data that's baked into the seed.
 
-**Per-exception buttons:**
-- **Approve** — accepts the drafted message as-is and closes the exception out.
-- **Edit** — turns the draft into an editable textarea before you approve it, in case Dana wants to change the wording before it goes out (still nothing is actually sent — same "queue, don't send" rule as Documents).
-- **Dismiss** — closes the exception without sending anything. Dismissed exceptions stay dismissed — clicking "Advance simulation time" again won't re-raise the same one.
+**What happens when you click it:**
+1. Every in-transit load's simulated position trace is evaluated against four deterministic detectors — route deviation, ETA slip, excessive dwell time (truck stopped too long), and contact loss.
+2. For each newly-detected problem, Gemini is called to write a plain-English explanation of the situation and draft a suggested check-in message for the driver.
+3. The feed refreshes with the resulting exception cards.
 
-Clicking "Advance simulation time" again later can surface further/new exceptions on loads that keep drifting, since it re-checks everything against the (simulated) current time each time you press it.
+**Why it takes 20–30 seconds:** This is not a spinner bug. The app makes several sequential real LLM calls — one per newly detected exception — with no mocking or caching at this stage. The delay is the actual Gemini API latency multiplied by the number of exceptions found. This is deliberate: the latency is real, and hiding it behind a fake fast response would misrepresent the system.
 
----
+**What to expect after clicking once on a fresh seed:**
+- A **route deviation / ETA slip** exception surfaces on one load — HIGH priority, with an AI explanation of what the deviation looks like and a draft check-in message.
+- A **prolonged dwell** exception surfaces on another load — the truck has been stopped far longer than a normal rest stop. Because the dwell time crosses the "possible breakdown" threshold, its priority is **hard-forced to HIGH** in code, regardless of what Gemini guessed. The AI cannot downplay a potential breakdown.
+- A **third load** produces no exception at all — the detectors don't flag it because nothing is wrong. This proves the system isn't just surfacing everything.
 
-## If something looks broken vs. is expected
+Clicking "Advance simulation time" again moves the clock forward further, potentially surfacing new exceptions on loads that continue to drift.
 
-| What you see | Expected? |
-|---|---|
-| Dispatch detail page shows "AI recommendation unavailable" on first load | Yes — 3s client timeout beat the real Gemini call. Reload the page. |
-| "Advance simulation time" appears to hang for 20-30s | Yes — 3 sequential real LLM calls, no shortcuts taken. |
-| A document's extracted fields are all "unknown" | Yes, if the source image was actually illegible — this is the low-confidence path working correctly, not a failure. |
-| A discrepancy exists but no charge gets added | Yes, if there's no supporting `ACCESSORIAL` document — this is the hallucination guard, not a missed feature. |
-| Clicking Assign on the non-recommended driver won't submit | Yes — it's waiting for you to type an override reason first. |
-| Page actually 500s / crashes | Not expected — flag this, it's a real bug. |
+### Per-exception buttons
+- **Approve** — accepts the drafted message and closes the exception.
+- **Edit** — opens the draft as editable text so Dana can adjust the wording before approving. Useful if the AI's tone isn't right.
+- **Dismiss** — closes the exception without sending anything. Dismissed exceptions are permanently closed; re-running the monitor won't surface the same one again.
+
+Nothing is sent anywhere — "Approve" means "accepted and queued," not "transmitted."
 
 ---
 
-## Resetting to a clean demo state
+## If something looks like a bug but isn't
 
-Click **"Reset demo data"** in the top-right of the nav header (next to "Dana's Fleet"), then confirm the dialog. This wipes and reseeds all loads/drivers/documents/exceptions back to the scenarios described above, so you can re-run the walkthrough from scratch — no terminal needed.
+| What you see | Is it a bug? | Why |
+|---|---|---|
+| Dispatch page shows "AI recommendation unavailable" | **No** | The 3-second client timeout beat the Gemini response. Reload — the result is cached server-side. |
+| "Advance simulation time" appears to hang for 20–30s | **No** | Real sequential LLM calls, not a frozen UI. Wait it out. |
+| A document's fields all show "unknown" | **No** | The source image was illegible — this is the honest low-confidence path, not a failure. |
+| A billing discrepancy exists but no charge is proposed | **No** | The hallucination guard: no ACCESSORIAL doc on file means no charge, regardless of AI confidence. |
+| The Assign button on a non-recommended driver won't submit | **No** | It's waiting for you to type an override reason in the text box above it. |
+| Page returns a 500 / crashes | **Yes** | That's a real bug — note what you clicked and what load/document you were on. |
 
-If you're working from a terminal instead, the equivalent command is:
+---
 
-```bash
-npx prisma db seed
-```
+## Resetting to a clean state
+
+Click **"Reset demo data"** in the top-right of the nav bar and confirm the dialog. This wipes and reseeds every load, driver, document, exception, and GPS trace back to the original scenarios — so you can walk through the whole thing again from scratch.
+
+All the scenarios described above will be restored. No terminal access needed.
