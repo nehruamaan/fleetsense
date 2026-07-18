@@ -56,11 +56,23 @@ async function main() {
     const sql = fs.readFileSync(sqlPath, "utf-8");
 
     // Split into individual statements. Prisma's generated migration.sql
-    // uses one statement per `;`, with `-- comment` lines as section markers.
+    // uses `-- CreateTable` / `-- CreateIndex` comment lines as section markers
+    // before the actual SQL statement. Split on `;`, then for each chunk:
+    //   1. Strip leading comment lines (lines starting with --)
+    //   2. Trim whitespace
+    //   3. Drop empty chunks
     const statements = sql
       .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith("--"));
+      .map((s) => {
+        // Remove lines that are pure comments, then trim
+        const withoutComments = s
+          .split("\n")
+          .filter((line) => !line.trimStart().startsWith("--"))
+          .join("\n")
+          .trim();
+        return withoutComments;
+      })
+      .filter((s) => s.length > 0);
 
     for (const statement of statements) {
       await client.execute(statement);
