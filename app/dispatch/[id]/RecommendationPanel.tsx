@@ -6,6 +6,7 @@ import { AiBadge } from "@/components/AiBadge";
 import { assignDriver } from "./actions";
 import type { Load } from "@/app/generated/prisma/client";
 import type { ScoredDriver } from "@/lib/dispatch";
+import { useToast } from "@/components/toast/ToastProvider";
 
 type CachedRecommendation = {
   recommendedDriverId: string;
@@ -30,9 +31,9 @@ export function RecommendationPanel({
   const [live, setLive] = useState<CachedRecommendation | null>(cachedRecommendation);
   const [overrideTarget, setOverrideTarget] = useState<string | null>(null);
   const [overrideReason, setOverrideReason] = useState("");
-  const [assignError, setAssignError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const showToast = useToast();
 
   async function compute() {
     setStatus("computing");
@@ -84,14 +85,14 @@ export function RecommendationPanel({
       return;
     }
     startTransition(async () => {
-      setAssignError(null);
       try {
         await assignDriver(load.id, driverId, isRecommended ? undefined : overrideReason);
         setOverrideTarget(null);
         setOverrideReason("");
+        showToast("Driver assigned.");
         router.refresh();
       } catch (err) {
-        setAssignError(err instanceof Error ? err.message : "Failed to assign driver.");
+        showToast(err instanceof Error ? err.message : "Failed to assign driver.", "error");
       }
     });
   }
@@ -109,15 +110,14 @@ export function RecommendationPanel({
         </button>
       </div>
 
-      {status === "computing" && <p className="text-sm text-zinc-500">Computing recommendation…</p>}
-      {status === "fallback" && (
-        <p className="text-sm text-amber-700 dark:text-amber-400">
-          AI recommendation unavailable right now — showing the deterministic ranking without rationale.
-        </p>
-      )}
-      {assignError && (
-        <p className="text-sm text-red-700 dark:text-red-400">{assignError}</p>
-      )}
+      <div aria-live="polite">
+        {status === "computing" && <p className="text-sm text-zinc-500">Computing recommendation…</p>}
+        {status === "fallback" && (
+          <p className="text-sm text-amber-700 dark:text-amber-400">
+            AI recommendation unavailable right now — showing the deterministic ranking without rationale.
+          </p>
+        )}
+      </div>
 
       <div className="grid gap-3">
         {ordered.map((candidate) => {

@@ -15,8 +15,9 @@ export default async function DriverPage() {
         className="space-y-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
       >
         <div>
-          <label className="block text-sm font-medium">Load</label>
+          <label htmlFor="loadId" className="block text-sm font-medium">Load</label>
           <select
+            id="loadId"
             name="loadId"
             required
             className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
@@ -29,8 +30,9 @@ export default async function DriverPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">Document type</label>
+          <label htmlFor="docType" className="block text-sm font-medium">Document type</label>
           <select
+            id="docType"
             name="type"
             required
             className="mt-1 w-full rounded-md border border-zinc-300 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
@@ -43,8 +45,8 @@ export default async function DriverPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium">Photo</label>
-          <input type="file" name="file" accept="image/*" required className="mt-1 w-full text-sm" />
+          <label htmlFor="file" className="block text-sm font-medium">Photo</label>
+          <input id="file" type="file" name="file" accept="image/*" required className="mt-1 w-full text-sm" />
         </div>
         <button
           type="submit"

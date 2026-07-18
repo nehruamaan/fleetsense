@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { maybeReconcile } from "@/lib/reconcile-load";
 import { resolveChargeDecision } from "@/lib/reconciliation";
@@ -36,18 +38,27 @@ export default async function DocumentReviewPage({
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/documents"
+        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Back to Documents
+      </Link>
       <h1 className="text-2xl font-semibold">
         {document.type} — Load #{document.loadId.slice(-6)}
       </h1>
       <p className="text-sm text-zinc-500">
-        {document.load.origin} → {document.load.destination}
+        <span className="inline-flex items-center gap-1">
+          {document.load.origin} <ArrowRight className="h-3.5 w-3.5 text-zinc-400" aria-hidden /> {document.load.destination}
+        </span>
       </p>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={document.imageUrl}
-          alt={`${document.type} document`}
+          alt={`Photo of the ${document.type.replace("_", " ").toLowerCase()} submitted for the load from ${document.load.origin} to ${document.load.destination}`}
           className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
         />
 
