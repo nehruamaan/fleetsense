@@ -51,3 +51,35 @@ export function haversineMiles(a: Coordinates, b: Coordinates): number {
   const c = 2 * Math.asin(Math.sqrt(h));
   return EARTH_RADIUS_MILES * c;
 }
+
+// Perpendicular distance from `point` to the segment routeStart->routeEnd,
+// clamped to the segment (never extrapolated past either endpoint).
+// Uses a locally-flattened planar approximation (longitude scaled by
+// cos(latitude)) -- accurate enough for the short/medium route segments
+// this demo uses, not meant for geodesic-precision routing.
+export function distanceFromRouteMiles(
+  point: Coordinates,
+  routeStart: Coordinates,
+  routeEnd: Coordinates
+): number {
+  const latScale = Math.cos((routeStart.lat * Math.PI) / 180);
+  const toXY = (c: Coordinates) => ({ x: c.lng * latScale, y: c.lat });
+
+  const p = toXY(point);
+  const a = toXY(routeStart);
+  const b = toXY(routeEnd);
+
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const lengthSq = abx * abx + aby * aby;
+
+  let t = lengthSq === 0 ? 0 : ((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSq;
+  t = Math.max(0, Math.min(1, t));
+
+  const closest: Coordinates = {
+    lat: a.y + t * aby,
+    lng: (a.x + t * abx) / latScale,
+  };
+
+  return haversineMiles(point, closest);
+}
