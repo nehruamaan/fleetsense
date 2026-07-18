@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ResetDemoButton } from "@/components/ResetDemoButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -52,9 +53,12 @@ export default function RootLayout({
                 ))}
               </nav>
             </div>
-            <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              Dana&apos;s Fleet
-            </span>
+            <div className="flex items-center gap-3">
+              <ResetDemoButton />
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Dana&apos;s Fleet
+              </span>
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
