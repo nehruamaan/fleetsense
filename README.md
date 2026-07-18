@@ -6,7 +6,7 @@ FleetSense is a live, interactive prototype built for a single dispatcher ("Dana
 
 Every AI feature makes a real network call to Gemini at runtime — nothing is mocked or pre-canned. Where a call fails, times out, or returns malformed output, the app falls back to a deterministic, non-AI result rather than breaking or hallucinating.
 
-> **Live demo →** *(link here once deployed)*
+> **Live demo →** https://fleetsense-live.vercel.app/dispatch
 >
 > **Demo walkthrough →** [`docs/DEMO_WALKTHROUGH.md`](docs/DEMO_WALKTHROUGH.md)
 
