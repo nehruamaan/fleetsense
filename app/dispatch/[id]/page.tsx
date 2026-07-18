@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getScoredCandidates } from "@/lib/dispatch";
 import { RecommendationPanel } from "./RecommendationPanel";
@@ -24,6 +26,13 @@ export default async function LoadDetailPage({
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/dispatch"
+        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Back to Dispatch
+      </Link>
       <div>
         <h1 className="text-2xl font-semibold">
           {load.origin} → {load.destination}

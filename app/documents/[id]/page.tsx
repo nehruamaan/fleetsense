@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { maybeReconcile } from "@/lib/reconcile-load";
 import { resolveChargeDecision } from "@/lib/reconciliation";
@@ -36,6 +38,13 @@ export default async function DocumentReviewPage({
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/documents"
+        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        Back to Documents
+      </Link>
       <h1 className="text-2xl font-semibold">
         {document.type} — Load #{document.loadId.slice(-6)}
       </h1>
