@@ -58,7 +58,7 @@ export default async function DocumentReviewPage({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={document.imageUrl}
-          alt={`${document.type} document`}
+          alt={`Photo of the ${document.type.replace("_", " ").toLowerCase()} submitted for the load from ${document.load.origin} to ${document.load.destination}`}
           className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
         />
 
