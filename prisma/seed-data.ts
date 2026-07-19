@@ -35,8 +35,12 @@ function writeDocSvg(filename: string, title: string, lines: string[], garbled =
     ${noiseOverlay}
   </svg>`;
 
-  fs.mkdirSync(SEED_IMAGE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(SEED_IMAGE_DIR, filename), svg, "utf-8");
+  try {
+    fs.mkdirSync(SEED_IMAGE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(SEED_IMAGE_DIR, filename), svg, "utf-8");
+  } catch (err) {
+    console.warn(`[seed-data] Warning: Could not write ${filename} to disk (read-only filesystem). Assuming pre-built asset is present.`);
+  }
   return `/seed/${filename}`;
 }
 
