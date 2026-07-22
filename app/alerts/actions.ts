@@ -27,18 +27,26 @@ export async function advanceSimulation() {
       });
       if (existing) continue;
 
-      const { result } = await getExceptionRead(load, candidate);
+      try {
+        const { result } = await getExceptionRead(load, candidate);
 
-      await prisma.exception.create({
-        data: {
-          loadId: load.id,
-          type: candidate.type,
-          priority: result.priority,
-          aiRead: result.likelyCause,
-          draftMessage: result.draftDriverMessage ?? result.draftCustomerMessage ?? null,
-          status: "OPEN",
-        },
-      });
+        await prisma.exception.create({
+          data: {
+            loadId: load.id,
+            type: candidate.type,
+            priority: result.priority,
+            aiRead: result.likelyCause,
+            draftMessage: result.draftDriverMessage ?? result.draftCustomerMessage ?? null,
+            status: "OPEN",
+          },
+        });
+      } catch (err) {
+        // The load this candidate belongs to may have been deleted mid-loop
+        // (e.g. "Reset demo data" clicked while a slow, multi-call simulation
+        // advance is still in flight) -- skip it rather than letting one
+        // stale candidate crash the rest of the simulation advance.
+        console.warn(`Skipping exception for load ${load.id}: it may have been reset mid-simulation.`, err);
+      }
     }
   }
 
